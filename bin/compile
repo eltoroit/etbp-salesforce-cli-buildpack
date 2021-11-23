@@ -25,6 +25,7 @@ source $BP_DIR/lib/stdlib.sh
 
 install_sfdx_cli() {
   npm install sfdx-cli --global
+  sfdx -v
 }
 
 setup_dirs() {
@@ -48,7 +49,8 @@ install_sfdx_cli
 
 # Install ETCopyData (etcopydata@0.6.4-Beta)
 log "Installing ETCopyData ..."
-npm install etcopydata@0.6.4-Beta --global
+npm install etcopydata@0.6.6-Beta --global
+sfdx plugins
 
 header "DONE! Completed in $(($SECONDS - $START_TIME))s"
 exit 0
