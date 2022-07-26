@@ -49,7 +49,7 @@ install_sfdx_cli
 
 # Install ETCopyData (etcopydata@0.6.4-Beta)
 log "Installing ETCopyData ..."
-npm install etcopydata@0.6.6-Beta --global
+npm install etcopydata@2.0.3 --global
 sfdx plugins
 
 header "DONE! Completed in $(($SECONDS - $START_TIME))s"
