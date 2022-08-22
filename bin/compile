@@ -48,9 +48,18 @@ fix_sfdx_cli() {
   ls -la $FILE_INSTALLED
   :
   echo "DIFF: Original > Installed (no differences)"
-  diff $FILE_ORIGINAL $FILE_INSTALLED
+  if diff $FILE_ORIGINAL $FILE_INSTALLED >/dev/null; then
+      echo "SAME";
+  else
+      echo "DIFFERENT";
+  fi
+  :
   echo "DIFF: Fixed > Installed (only one line)"
-  diff $FILE_FIXED $FILE_INSTALLED
+  if diff $FILE_FIXED $FILE_INSTALLED >/dev/null; then
+      echo "SAME";
+  else
+      echo "DIFFERENT";
+  fi
 }
 
 install_ETCopyData() {
