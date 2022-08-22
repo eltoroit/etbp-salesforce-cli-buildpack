@@ -31,6 +31,8 @@ install_sfdx_cli() {
 fix_sfdx_cli() {
   header "Fixing sfdx-cli"
   echo $BUILD_DIR
+  ls -la
+  pwd
   # Find Original file
   cd $BUILD_DIR
   ls -la
