@@ -30,10 +30,16 @@ install_sfdx_cli() {
 
 fix_sfdx_cli() {
   header "Fixing sfdx-cli"
+  echo $BUILD_DIR
+  FIX_PATH="~/.heroku/node/lib/node_modules/sfdx-cli/node_modules/@salesforce/core/lib/org/"
+  cd $FIX_PATH
+  pwd
+  ls -la auth*
 }
 
 install_ETCopyData() {
   npm install etcopydata@2.0.3 --global
+  log "Plugins?"
   sfdx plugins
 }
 
