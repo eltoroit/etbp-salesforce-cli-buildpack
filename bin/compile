@@ -50,10 +50,10 @@ fix_sfdx_cli() {
   log "DIFF: Original > Installed (no differences)"
   if diff $FILE_ORIGINAL $FILE_INSTALLED >/dev/null; then
       log "Installed file is the expected one, replace it with the fixes";
-      rm $FILE_INSTALLED
-      ls -la $FILE_INSTALLED
-      cp $FILE_ORIGINAL $FILE_INSTALLED
-      ls -la $FILE_INSTALLED
+      # rm $FILE_INSTALLED
+      # ls -la $FILE_INSTALLED
+      cp $FILE_FIXED $FILE_INSTALLED
+      # ls -la $FILE_INSTALLED
   else
       log "File is not the expected one! Abort building";
       diff $FILE_ORIGINAL $FILE_INSTALLED
