@@ -34,32 +34,36 @@ fix_sfdx_cli() {
   # Find Original file
   cd $MY_FILES
   FILE_ORIGINAL="$MY_FILES/files/sfdxOriginal.js"
-  echo "FILE_ORIGINAL: $FILE_ORIGINAL"
+  log "FILE_ORIGINAL: $FILE_ORIGINAL"
   ls -la $FILE_ORIGINAL
   :
   # Find Fixed file
   FILE_FIXED="$MY_FILES/files/sfdxFixed.js"
-  echo "FILE_FIXED: $FILE_FIXED"
+  log "FILE_FIXED: $FILE_FIXED"
   ls -la $FILE_FIXED
   :
   # Find Installed file
   FILE_INSTALLED="$BUILD_DIR/.heroku/node/lib/node_modules/sfdx-cli/node_modules/@salesforce/core/lib/org//authInfo.js"
-  echo "FILE_INSTALLED: $FILE_INSTALLED"
+  log "FILE_INSTALLED: $FILE_INSTALLED"
   ls -la $FILE_INSTALLED
   :
-  echo "DIFF: Original > Installed (no differences)"
+  log "DIFF: Original > Installed (no differences)"
   if diff $FILE_ORIGINAL $FILE_INSTALLED >/dev/null; then
-      echo "SAME";
+      log "Installed file is the expected one, replace it with the fixes";
+      cp $FILE_ORIGINAL $FILE_INSTALLED
   else
-      echo "DIFFERENT";
+      log "File is not the expected one! Abort building";
+      diff $FILE_ORIGINAL $FILE_INSTALLED
   fi
   :
   echo "DIFF: Fixed > Installed (only one line)"
   if diff $FILE_FIXED $FILE_INSTALLED >/dev/null; then
-      echo "SAME";
+      echo "File copied succesfully";
   else
-      echo "DIFFERENT";
+      echo "Error copying file";
+      diff $FILE_FIXED $FILE_INSTALLED
   fi
+  :
 }
 
 install_ETCopyData() {
