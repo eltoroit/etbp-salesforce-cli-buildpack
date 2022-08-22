@@ -44,11 +44,11 @@ fix_sfdx_cli() {
       diff $FILE_ORIGINAL $FILE_INSTALLED
   fi
   :
-  if diff $FILE_ORIGINAL $FILE_INSTALLED >/dev/null; then
+  if diff $FILE_FIXED $FILE_INSTALLED >/dev/null; then
       log "File [authInfo.js] replaced succesfully";
   else
       log "Error replacinging file [authInfo.js]";
-      diff $FILE_ORIGINAL $FILE_INSTALLED
+      diff $FILE_FIXED $FILE_INSTALLED
   fi
   :
 }
