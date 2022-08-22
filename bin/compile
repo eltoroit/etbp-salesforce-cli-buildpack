@@ -31,24 +31,26 @@ install_sfdx_cli() {
 fix_sfdx_cli() {
   header "Fixing sfdx-cli"
   MY_FILES=`pwd`
-  echo "Files: $MY_FILES"
-  cd files
-  ls -la
   # Find Original file
   cd $MY_FILES
   FILE_ORIGINAL="$MY_FILES/files/sfdxOriginal.js"
   echo "FILE_ORIGINAL: $FILE_ORIGINAL"
   ls -la $FILE_ORIGINAL
+  :
   # Find Fixed file
   FILE_FIXED="$MY_FILES/files/sfdxFixed.js"
   echo "FILE_FIXED: $FILE_FIXED"
   ls -la $FILE_FIXED
+  :
   # Find Installed file
-  cd "$BUILD_DIR/.heroku/node/lib/node_modules/sfdx-cli/node_modules/@salesforce/core/lib/org/"
-  TMP=`pwd`
-  FILE_INSTALLED="$TMP/authInfo.js"
+  FILE_INSTALLED="$BUILD_DIR/.heroku/node/lib/node_modules/sfdx-cli/node_modules/@salesforce/core/lib/org//authInfo.js"
   echo "FILE_INSTALLED: $FILE_INSTALLED"
   ls -la $FILE_INSTALLED
+  :
+  echo "DIFF: Original > Installed (no differences)"
+  diff $FILE_ORIGINAL $FILE_INSTALLED
+  echo "DIFF: Fixed > Installed (only one line)"
+  diff $FILE_FIXED $FILE_INSTALLED
 }
 
 install_ETCopyData() {
