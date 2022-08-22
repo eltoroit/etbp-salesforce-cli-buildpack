@@ -3,7 +3,7 @@
 - https://devcenter.heroku.com/articles/buildpack-api
 - Adding a build pack
   - `https://github.com/eltoroit/etbp-salesforce-cli-buildpack.git`
-  - `https://github.com/eltoroit/etbp-salesforce-cli-buildpack.git#tests`
+  - `https://github.com/eltoroit/etbp-salesforce-cli-buildpack.git#Tests`
 
 ## Notes
 
