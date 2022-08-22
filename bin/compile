@@ -31,6 +31,9 @@ install_sfdx_cli() {
 fix_sfdx_cli() {
   header "Fixing sfdx-cli"
   MY_FILES=`${pwd}`
+  echo $MY_FILES
+  cd files
+  ls -la
   # Find Original file
   cd $MY_FILES
   FILE_ORIGINAL="${MY_FILES}/files/sfdxOriginal.js"
