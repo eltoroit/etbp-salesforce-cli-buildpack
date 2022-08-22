@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# bin/detect <build-dir>
+# bin/detect BUILD_DIR
 
-echo "salesforce-cli-buildpack"
+echo "sfdx-cli-buildpack (fixed) + ETCopyData"
 exit 0
