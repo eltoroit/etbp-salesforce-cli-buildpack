@@ -30,10 +30,10 @@ install_sfdx_cli() {
 
 fix_sfdx_cli() {
   header "Fixing sfdx-cli"
-  MY_FILES=`pwd`
-  FILE_FIXED="$MY_FILES/files/sfdxFixed.js"
-  FILE_ORIGINAL="$MY_FILES/files/sfdxOriginal.js"
-  FILE_INSTALLED="$BUILD_DIR/.heroku/node/lib/node_modules/sfdx-cli/node_modules/@salesforce/core/lib/org/authInfo.js"
+  local MY_FILES=`pwd`
+  local FILE_FIXED="$MY_FILES/files/sfdxFixed.js"
+  local FILE_ORIGINAL="$MY_FILES/files/sfdxOriginal.js"
+  local FILE_INSTALLED="$BUILD_DIR/.heroku/node/lib/node_modules/sfdx-cli/node_modules/@salesforce/core/lib/org/authInfo.js"
 
   # Validate if iwe have the expected file (there should be no differences), and if so, then replace it
   if diff $FILE_ORIGINAL $FILE_INSTALLED >/dev/null; then
@@ -42,22 +42,24 @@ fix_sfdx_cli() {
   else
       log "Error: File is NOT the expected one! Abort building";
       diff $FILE_ORIGINAL $FILE_INSTALLED
+      exit 1
   fi
   :
   # Validate the replacement works by comparing the files, there should be no differences
   if diff $FILE_FIXED $FILE_INSTALLED >/dev/null; then
       log "File [authInfo.js] replaced succesfully";
   else
-      log "Error replacing file [authInfo.js]";
+      log "Error replacing file [authInfo.js]! Abort building";
       diff $FILE_FIXED $FILE_INSTALLED
+      exit 1
   fi
   :
 }
 
 install_ETCopyData() {
   npm install etcopydata@2.0.3 --global
-  log "Plugins?"
-  sfdx plugins
+  local VERSION=`jq .version "$BUILD_DIR/.heroku/node/lib/node_modules/etcopydata/package.json"`
+  log "ETCopyData version $VERSION installed"
 }
 
 setup_dirs() {
