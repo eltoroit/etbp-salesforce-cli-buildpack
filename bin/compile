@@ -31,19 +31,20 @@ install_sfdx_cli() {
 fix_sfdx_cli() {
   header "Fixing sfdx-cli"
   MY_FILES=`pwd`
-  FILE_ORIGINAL="$MY_FILES/files/sfdxOriginal.js"
   FILE_FIXED="$MY_FILES/files/sfdxFixed.js"
+  FILE_ORIGINAL="$MY_FILES/files/sfdxOriginal.js"
   FILE_INSTALLED="$BUILD_DIR/.heroku/node/lib/node_modules/sfdx-cli/node_modules/@salesforce/core/lib/org/authInfo.js"
 
+  # Validate if iwe have the expected file (there should be no differences), and if so, then replace it
   if diff $FILE_ORIGINAL $FILE_INSTALLED >/dev/null; then
       log "Installed file [authInfo.js] is the expected one, replace it with the fixes";
       cp $FILE_FIXED $FILE_INSTALLED
-      # ls -la $FILE_INSTALLED
   else
       log "File is not the expected one! Abort building";
       diff $FILE_ORIGINAL $FILE_INSTALLED
   fi
   :
+  # Validate the replacement works by comparing the files, there should be no differences
   if diff $FILE_FIXED $FILE_INSTALLED >/dev/null; then
       log "File [authInfo.js] replaced succesfully";
   else
