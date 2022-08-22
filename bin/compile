@@ -38,7 +38,7 @@ fix_sfdx_cli() {
   if diff $FILE_ORIGINAL $FILE_INSTALLED >/dev/null; then
       log "Installed file [authInfo.js] is the expected one, replace it with the fixes";
       cp $FILE_FIXED $FILE_INSTALLED
-      ls -la $FILE_INSTALLED
+      # ls -la $FILE_INSTALLED
   else
       log "File is not the expected one! Abort building";
       diff $FILE_ORIGINAL $FILE_INSTALLED
@@ -49,6 +49,7 @@ fix_sfdx_cli() {
   else
       log "Error replacinging file [authInfo.js]";
       diff $FILE_FIXED $FILE_INSTALLED
+      exit 1
   fi
   :
 }
