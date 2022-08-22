@@ -49,7 +49,6 @@ fix_sfdx_cli() {
   else
       log "Error replacinging file [authInfo.js]";
       diff $FILE_ORIGINAL $FILE_INSTALLED
-      exit 1
   fi
   :
 }
