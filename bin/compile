@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# bin/compile <build-dir> <cache-dir> <env-dir>
+# bin/compile BUILD_DIR CACHE_DIR ENV_DIR
 
 START_TIME=$SECONDS
 
@@ -28,11 +28,20 @@ install_sfdx_cli() {
   sfdx -v
 }
 
+fix_sfdx_cli() {
+  header "Fixing sfdx-cli"
+}
+
+install_ETCopyData() {
+  npm install etcopydata@2.0.3 --global
+  sfdx plugins
+}
+
 setup_dirs() {
   export PATH="$BUILD_DIR/vendor/sfdx/cli/bin:$PATH"
 }
 
-header 'Welcome to salesforce-cli-buildpack!'
+header "sfdx-cli-buildpack (fixed) + ETCopyData"
 log "Exporting environment directories ..."
 export_env "$ENV_DIR"
 
@@ -46,11 +55,11 @@ debug "BP_DIR: $BP_DIR"
 setup_dirs
 log "Starting CLI installation ..."
 install_sfdx_cli
+fix_sfdx_cli
 
 # Install ETCopyData (etcopydata@0.6.4-Beta)
-log "Installing ETCopyData ..."
-npm install etcopydata@2.0.3 --global
-sfdx plugins
+header "Installing ETCopyData ..."
+install_ETCopyData
 
 header "DONE! Completed in $(($SECONDS - $START_TIME))s"
 exit 0
