@@ -32,8 +32,8 @@ fix_sfdx_cli() {
   header "Fixing sfdx-cli"
   echo $BUILD_DIR
   cd $BUILD_DIR
-  # FIX_PATH="~/.heroku/node/lib/node_modules/sfdx-cli/node_modules/@salesforce/core/lib/org/"
-  # cd $FIX_PATH
+  pwd
+  cd ".heroku/node/lib/node_modules/sfdx-cli/node_modules/@salesforce/core/lib/org/"
   pwd
   ls -la
 }
