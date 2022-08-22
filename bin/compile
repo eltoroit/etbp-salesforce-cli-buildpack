@@ -31,11 +31,27 @@ install_sfdx_cli() {
 fix_sfdx_cli() {
   header "Fixing sfdx-cli"
   echo $BUILD_DIR
+  # Find Original file
   cd $BUILD_DIR
-  pwd
-  cd ".heroku/node/lib/node_modules/sfdx-cli/node_modules/@salesforce/core/lib/org/"
-  pwd
   ls -la
+  cd "@ELTOROIT"
+  TMP=`${pwd}`
+  FILE_ORIGINAL="${TMP}/sfdxOriginal.js"
+  echo $FILE_ORIGINAL
+  ls -la $FILE_ORIGINAL
+  # Find Fixed file
+  cd $BUILD_DIR
+  cd "@ELTOROIT"
+  FILE_FIXED="${TMP}/sfdxFixed.js"
+  echo $FILE_FIXED
+  ls -la $FILE_FIXED
+  # Find Installed file
+  cd $BUILD_DIR
+  cd ".heroku/node/lib/node_modules/sfdx-cli/node_modules/@salesforce/core/lib/org/"
+  TMP=`${pwd}`
+  FILE_INSTALLED="${TMP}/sfdxFixed.js"
+  echo $FILE_INSTALLED
+  ls -la $FILE_INSTALLED
 }
 
 install_ETCopyData() {
