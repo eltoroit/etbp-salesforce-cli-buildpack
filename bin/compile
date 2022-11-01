@@ -31,8 +31,8 @@ install_sfdx_cli() {
 fix_sfdx_cli() {
   header "Fixing sfdx-cli"
   local MY_FILES=`pwd`
-  local FILE_FIXED="$MY_FILES/files/sfdxFixed.js"
-  local FILE_ORIGINAL="$MY_FILES/files/sfdxOriginal.js"
+  local FILE_FIXED="$MY_FILES/files/sfdxFixed.txt"
+  local FILE_ORIGINAL="$MY_FILES/files/sfdxOriginal.txt"
   local FILE_INSTALLED="$BUILD_DIR/.heroku/node/lib/node_modules/sfdx-cli/node_modules/@salesforce/core/lib/org/authInfo.js"
 
   # Validate if iwe have the expected file (there should be no differences), and if so, then replace it
