@@ -1,12 +1,13 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.AuthInfo = exports.DEFAULT_CONNECTED_APP_INFO = void 0;
 /*
  * Copyright (c) 2020, salesforce.com, inc.
  * All rights reserved.
  * Licensed under the BSD 3-Clause license.
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
+/* eslint-disable class-methods-use-this */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.AuthInfo = exports.DEFAULT_CONNECTED_APP_INFO = void 0;
 const crypto_1 = require("crypto");
 const path_1 = require("path");
 const os = require("os");
@@ -35,7 +36,7 @@ const messages = messages_1.Messages.load('@salesforce/core', 'core', [
     'orgDataNotAvailableError',
     'orgDataNotAvailableError.actions',
     'refreshTokenAuthError',
-    'jwtAuthError',
+    'jwtAuthErrors',
     'authCodeUsernameRetrievalError',
     'authCodeExchangeError',
     'missingClientId',
@@ -109,7 +110,7 @@ class AuthInfo extends kit_1.AsyncOptionalCreatable {
         super(options);
         // Possibly overridden in create
         this.usingAccessToken = false;
-        this.options = options || {};
+        this.options = options ?? {};
     }
     /**
      * Returns the default instance url
@@ -118,7 +119,7 @@ class AuthInfo extends kit_1.AsyncOptionalCreatable {
      */
     static getDefaultInstanceUrl() {
         const configuredInstanceUrl = configAggregator_1.ConfigAggregator.getValue(orgConfigProperties_1.OrgConfigProperties.ORG_INSTANCE_URL).value;
-        return configuredInstanceUrl || sfdcUrl_1.SfdcUrl.PRODUCTION;
+        return configuredInstanceUrl ?? sfdcUrl_1.SfdcUrl.PRODUCTION;
     }
     /**
      * Get a list of all authorizations based on auth files stored in the global directory.
@@ -143,6 +144,8 @@ class AuthInfo extends kit_1.AsyncOptionalCreatable {
                 .filter((c) => aliases.includes(c.value) || c.value === username)
                 .map((c) => c.key);
             try {
+                // prevent ConfigFile collision bug
+                // eslint-disable-next-line no-await-in-loop
                 const authInfo = await AuthInfo.create({ username });
                 const { orgId, instanceUrl, devHubUsername, expirationDate, isDevHub } = authInfo.getFields();
                 final.push({
@@ -151,7 +154,8 @@ class AuthInfo extends kit_1.AsyncOptionalCreatable {
                     username,
                     instanceUrl,
                     isScratchOrg: Boolean(devHubUsername),
-                    isDevHub: isDevHub || false,
+                    isDevHub: isDevHub ?? false,
+                    // eslint-disable-next-line no-await-in-loop
                     isSandbox: await stateAggregator.sandboxes.hasFile(orgId),
                     orgId: orgId,
                     accessToken: authInfo.getConnectionOptions().accessToken,
@@ -201,14 +205,14 @@ class AuthInfo extends kit_1.AsyncOptionalCreatable {
     static getAuthorizationUrl(options, oauth2) {
         // Always use a verifier for enhanced security
         options.useVerifier = true;
-        const oauth2Verifier = oauth2 || new jsforce_1.OAuth2(options);
+        const oauth2Verifier = oauth2 ?? new jsforce_1.OAuth2(options);
         // The state parameter allows the redirectUri callback listener to ignore request
         // that don't contain the state value.
         const params = {
             state: (0, crypto_1.randomBytes)(Math.ceil(6)).toString('hex'),
             prompt: 'login',
             // Default connected app is 'refresh_token api web'
-            scope: options.scope || kit_1.env.getString('SFDX_AUTH_SCOPES', 'refresh_token api web'),
+            scope: options.scope ?? kit_1.env.getString('SFDX_AUTH_SCOPES', 'refresh_token api web'),
         };
         return oauth2Verifier.getAuthorizationUrl(params);
     }
@@ -281,7 +285,7 @@ class AuthInfo extends kit_1.AsyncOptionalCreatable {
      * Find all dev hubs available in the local environment.
      */
     static async getDevHubAuthInfos() {
-        return await AuthInfo.listAllAuthorizations((possibleHub) => possibleHub?.isDevHub ?? false);
+        return AuthInfo.listAllAuthorizations((possibleHub) => possibleHub?.isDevHub ?? false);
     }
     static async queryScratchOrg(devHubUsername, scratchOrgId) {
         const devHubOrg = await org_1.Org.create({ aliasOrUsername: devHubUsername });
@@ -346,7 +350,7 @@ class AuthInfo extends kit_1.AsyncOptionalCreatable {
      */
     update(authData) {
         if (authData && (0, ts_types_1.isPlainObject)(authData)) {
-            this.username = authData.username || this.username;
+            this.username = authData.username ?? this.username;
             this.stateAggregator.orgs.update(this.username, authData);
             this.logger.info(`Updated auth info for username: ${this.username}`);
         }
@@ -381,7 +385,7 @@ class AuthInfo extends kit_1.AsyncOptionalCreatable {
             // Decrypt a user provided client secret or use the default.
             opts = {
                 oauth2: {
-                    loginUrl: instanceUrl || sfdcUrl_1.SfdcUrl.PRODUCTION,
+                    loginUrl: instanceUrl ?? sfdcUrl_1.SfdcUrl.PRODUCTION,
                     clientId: this.getClientId(),
                     redirectUri: this.getRedirectUri(),
                 },
@@ -394,7 +398,7 @@ class AuthInfo extends kit_1.AsyncOptionalCreatable {
         return opts;
     }
     getClientId() {
-        return this.getFields()?.clientId || exports.DEFAULT_CONNECTED_APP_INFO.legacyClientId;
+        return this.getFields()?.clientId ?? exports.DEFAULT_CONNECTED_APP_INFO.legacyClientId;
     }
     getRedirectUri() {
         return 'http://localhost:1717/OauthRedirect';
@@ -432,7 +436,7 @@ class AuthInfo extends kit_1.AsyncOptionalCreatable {
         const instanceUrl = (0, ts_types_1.ensure)(decryptedFields.instanceUrl, 'undefined instanceUrl').replace(/^https?:\/\//, '');
         let sfdxAuthUrl = 'force://';
         if (decryptedFields.clientId) {
-            sfdxAuthUrl += `${decryptedFields.clientId}:${decryptedFields.clientSecret || ''}:`;
+            sfdxAuthUrl += `${decryptedFields.clientId}:${decryptedFields.clientSecret ?? ''}:`;
         }
         sfdxAuthUrl += `${(0, ts_types_1.ensure)(decryptedFields.refreshToken, 'undefined refreshToken')}@${instanceUrl}`;
         return sfdxAuthUrl;
@@ -505,7 +509,7 @@ class AuthInfo extends kit_1.AsyncOptionalCreatable {
     async init() {
         this.stateAggregator = await stateAggregator_1.StateAggregator.getInstance();
         const username = this.options.username;
-        const authOptions = this.options.oauth2Options || this.options.accessTokenOptions;
+        const authOptions = this.options.oauth2Options ?? this.options.accessTokenOptions;
         // Must specify either username and/or options
         if (!username && !authOptions) {
             throw messages.createError('authInfoCreationError');
@@ -517,7 +521,7 @@ class AuthInfo extends kit_1.AsyncOptionalCreatable {
                 throw messages.createError('authInfoOverwriteError');
             }
         }
-        const oauthUsername = username || authOptions?.username;
+        const oauthUsername = username ?? authOptions?.username;
         if (oauthUsername) {
             this.username = oauthUsername;
             await this.stateAggregator.orgs.read(oauthUsername, false, false);
@@ -527,7 +531,7 @@ class AuthInfo extends kit_1.AsyncOptionalCreatable {
             // Need to initAuthOptions the logger and authInfoCrypto since we don't call init()
             this.logger = await logger_1.Logger.child('AuthInfo');
             const aggregator = await configAggregator_1.ConfigAggregator.create();
-            const instanceUrl = this.getInstanceUrl(authOptions, aggregator);
+            const instanceUrl = this.getInstanceUrl(aggregator, authOptions);
             this.update({
                 accessToken: oauthUsername,
                 instanceUrl,
@@ -544,7 +548,7 @@ class AuthInfo extends kit_1.AsyncOptionalCreatable {
             await this.initAuthOptions(authOptions);
         }
     }
-    getInstanceUrl(options, aggregator) {
+    getInstanceUrl(aggregator, options) {
         const instanceUrl = options?.instanceUrl ?? aggregator.getPropertyValue(orgConfigProperties_1.OrgConfigProperties.ORG_INSTANCE_URL);
         return instanceUrl ?? sfdcUrl_1.SfdcUrl.PRODUCTION;
     }
@@ -595,14 +599,12 @@ class AuthInfo extends kit_1.AsyncOptionalCreatable {
                     // refresh token flow (from sfdxUrl or OAuth refreshFn)
                     authConfig = await this.buildRefreshTokenConfig(options);
                 }
+                else if (this.options.oauth2 instanceof jsforce_1.OAuth2) {
+                    // authcode exchange / web auth flow
+                    authConfig = await this.exchangeToken(options, this.options.oauth2);
+                }
                 else {
-                    if (this.options.oauth2 instanceof jsforce_1.OAuth2) {
-                        // authcode exchange / web auth flow
-                        authConfig = await this.exchangeToken(options, this.options.oauth2);
-                    }
-                    else {
-                        authConfig = await this.exchangeToken(options);
-                    }
+                    authConfig = await this.exchangeToken(options);
                 }
             }
             authConfig.isDevHub = await this.determineIfDevHub((0, ts_types_1.ensureString)(authConfig.instanceUrl), (0, ts_types_1.ensureString)(authConfig.accessToken));
@@ -613,6 +615,7 @@ class AuthInfo extends kit_1.AsyncOptionalCreatable {
         }
         return this;
     }
+    // eslint-disable-next-line @typescript-eslint/require-await
     async loadDecryptedAuthFromConfig(username) {
         // Fetch from the persisted auth file
         const authInfo = this.stateAggregator.orgs.get(username, true);
@@ -668,17 +671,22 @@ class AuthInfo extends kit_1.AsyncOptionalCreatable {
         const loginAndAudienceUrls = (0, sfdcUrl_1.getLoginAudienceCombos)(audienceUrl, loginUrl);
         for (const [login, audience] of loginAndAudienceUrls) {
             try {
+                // sequentially, in probabilistic order
+                // eslint-disable-next-line no-await-in-loop
                 authFieldsBuilder = await this.tryJwtAuth(options.clientId, login, audience, privateKeyContents);
                 break;
             }
             catch (err) {
                 const error = err;
-                const message = error.message.includes('audience') ? `${error.message}-${login}:${audience}` : error.message;
+                const message = error.message.includes('audience')
+                    ? `${error.message}  [audience=${audience} login=${login}]`
+                    : error.message;
                 authErrors.push(message);
             }
         }
         if (!authFieldsBuilder) {
-            throw messages.createError('jwtAuthError', [authErrors.join('\n')]);
+            // messages.createError expects names to end in `error` and this one says Errors so do it manually.
+            throw new sfError_1.SfError(messages.getMessage('jwtAuthErrors', [authErrors.join('\n')]), 'JwtAuthError');
         }
         const authFields = {
             accessToken: (0, ts_types_1.asString)(authFieldsBuilder.access_token),
@@ -695,7 +703,9 @@ class AuthInfo extends kit_1.AsyncOptionalCreatable {
             authFields.instanceUrl = instanceUrl;
         }
         catch (err) {
-            this.logger.debug(`Instance URL [${authFieldsBuilder.instance_url}] is not available.  DNS lookup failed. Using loginUrl [${options.loginUrl}] instead. This may result in a "Destination URL not reset" error.`);
+            this.logger.debug(
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+            `Instance URL [${authFieldsBuilder.instance_url}] is not available.  DNS lookup failed. Using loginUrl [${options.loginUrl}] instead. This may result in a "Destination URL not reset" error.`);
             authFields.instanceUrl = options.loginUrl;
         }
         return authFields;
@@ -710,6 +720,8 @@ class AuthInfo extends kit_1.AsyncOptionalCreatable {
             algorithm: 'RS256',
         });
         const oauth2 = new jsforce_1.JwtOAuth2({ loginUrl });
+        // jsforce has it types as any
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         return (0, ts_types_1.ensureJsonMap)(await oauth2.jwtAuthorize(jwtToken));
     }
     // Build OAuth config for a refresh token auth flow
@@ -731,6 +743,7 @@ class AuthInfo extends kit_1.AsyncOptionalCreatable {
         catch (err) {
             throw messages.createError('refreshTokenAuthError', [err.message]);
         }
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         const { orgId } = parseIdUrl(authFieldsBuilder.id);
         let username = this.getUsername();
@@ -743,7 +756,7 @@ class AuthInfo extends kit_1.AsyncOptionalCreatable {
             username,
             accessToken: authFieldsBuilder.access_token,
             instanceUrl: authFieldsBuilder.instance_url,
-            loginUrl: options.loginUrl || authFieldsBuilder.instance_url,
+            loginUrl: options.loginUrl ?? authFieldsBuilder.instance_url,
             refreshToken: options.refreshToken,
             clientId: options.clientId,
             clientSecret: options.clientSecret,
@@ -776,6 +789,7 @@ class AuthInfo extends kit_1.AsyncOptionalCreatable {
         // Only need to query for the username if it isn't known. For example, a new auth code exchange
         // rather than refreshing a token on an existing connection.
         if (!username) {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
             const userInfo = await this.retrieveUserInfo(authFields.instance_url, authFields.access_token);
             username = userInfo?.username;
@@ -785,7 +799,7 @@ class AuthInfo extends kit_1.AsyncOptionalCreatable {
             instanceUrl: authFields.instance_url,
             orgId,
             username,
-            loginUrl: options.loginUrl || authFields.instance_url,
+            loginUrl: options.loginUrl ?? authFields.instance_url,
             refreshToken: authFields.refresh_token,
             clientId: options.clientId,
             clientSecret: options.clientSecret,
@@ -798,7 +812,7 @@ class AuthInfo extends kit_1.AsyncOptionalCreatable {
         const apiVersion = 'v51.0'; // hardcoding to v51.0 just for this call is okay.
         const instance = (0, ts_types_1.ensure)(instanceUrl);
         const baseUrl = new sfdcUrl_1.SfdcUrl(instance);
-        const userInfoUrl = `${baseUrl}services/oauth2/userinfo`;
+        const userInfoUrl = `${baseUrl.toString()}services/oauth2/userinfo`;
         const headers = Object.assign({ Authorization: `Bearer ${accessToken}` }, connection_1.SFDX_HTTP_HEADERS);
         try {
             this.logger.info(`Sending request for Username after successful auth code exchange to URL: ${userInfoUrl}`);
@@ -808,7 +822,7 @@ class AuthInfo extends kit_1.AsyncOptionalCreatable {
             }
             else {
                 const userInfoJson = (0, kit_1.parseJsonMap)(response.body);
-                const url = `${baseUrl}/services/data/${apiVersion}/sobjects/User/${userInfoJson.user_id}`;
+                const url = `${baseUrl.toString()}/services/data/${apiVersion}/sobjects/User/${userInfoJson.user_id}`;
                 this.logger.info(`Sending request for User SObject after successful auth code exchange to URL: ${url}`);
                 response = await new transport_1.default().httpRequest({ url, method: 'GET', headers });
                 if (response.statusCode >= 400) {
@@ -860,7 +874,7 @@ class AuthInfo extends kit_1.AsyncOptionalCreatable {
         const apiVersion = 'v51.0'; // hardcoding to v51.0 just for this call is okay.
         const instance = (0, ts_types_1.ensure)(instanceUrl);
         const baseUrl = new sfdcUrl_1.SfdcUrl(instance);
-        const scratchOrgInfoUrl = `${baseUrl}/services/data/${apiVersion}/query?q=SELECT%20Id%20FROM%20ScratchOrgInfo%20limit%201`;
+        const scratchOrgInfoUrl = `${baseUrl.toString()}/services/data/${apiVersion}/query?q=SELECT%20Id%20FROM%20ScratchOrgInfo%20limit%201`;
         const headers = Object.assign({ Authorization: `Bearer ${accessToken}` }, connection_1.SFDX_HTTP_HEADERS);
         try {
             const res = await new transport_1.default().httpRequest({ url: scratchOrgInfoUrl, method: 'GET', headers });
