@@ -55,15 +55,7 @@ function parseIdUrl(idUrl) {
 }
 exports.DEFAULT_CONNECTED_APP_INFO = {
     clientId: 'PlatformCLI',
-    // Legacy. The connected app info is owned by the thing that
-    // creates new AuthInfos. Currently that is the auth:* commands which
-    // aren't owned by this core library. These values need to be here
-    // for any old auth files where the id and secret aren't stored.
-    //
-    // Ideally, this would be removed at some point in the distant future
-    // when all auth files now have the clientId stored in it.
-    legacyClientId: "PlatformCLI", // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< ELTOROIT: CHANGED THIS!
-    legacyClientSecret: '1384510088588713504',
+    clientSecret: '',
 };
 /**
  * Handles persistence and fetching of user authentication information using
@@ -290,7 +282,7 @@ class AuthInfo extends kit_1.AsyncOptionalCreatable {
     static async queryScratchOrg(devHubUsername, scratchOrgId) {
         const devHubOrg = await org_1.Org.create({ aliasOrUsername: devHubUsername });
         const conn = devHubOrg.getConnection();
-        const data = await conn.query(`select Id from ScratchOrgInfo where ScratchOrg = '${sfdc_1.sfdc.trimTo15(scratchOrgId)}'`);
+        const data = await conn.query(`select Id from ScratchOrgInfo where ScratchOrg = '${(0, sfdc_1.trimTo15)(scratchOrgId)}'`);
         return data;
     }
     /**
@@ -334,7 +326,7 @@ class AuthInfo extends kit_1.AsyncOptionalCreatable {
     async save(authData) {
         this.update(authData);
         const username = (0, ts_types_1.ensure)(this.getUsername());
-        if (sfdc_1.sfdc.matchesAccessToken(username)) {
+        if ((0, sfdc_1.matchesAccessToken)(username)) {
             this.logger.debug('Username is an accesstoken. Skip saving authinfo to disk.');
             return this;
         }
@@ -398,7 +390,7 @@ class AuthInfo extends kit_1.AsyncOptionalCreatable {
         return opts;
     }
     getClientId() {
-        return this.getFields()?.clientId ?? exports.DEFAULT_CONNECTED_APP_INFO.legacyClientId;
+        return this.getFields()?.clientId ?? exports.DEFAULT_CONNECTED_APP_INFO.clientId;
     }
     getRedirectUri() {
         return 'http://localhost:1717/OauthRedirect';
@@ -527,7 +519,7 @@ class AuthInfo extends kit_1.AsyncOptionalCreatable {
             await this.stateAggregator.orgs.read(oauthUsername, false, false);
         } // Else it will be set in initAuthOptions below.
         // If the username is an access token, use that for auth and don't persist
-        if ((0, ts_types_1.isString)(oauthUsername) && sfdc_1.sfdc.matchesAccessToken(oauthUsername)) {
+        if ((0, ts_types_1.isString)(oauthUsername) && (0, sfdc_1.matchesAccessToken)(oauthUsername)) {
             // Need to initAuthOptions the logger and authInfoCrypto since we don't call init()
             this.logger = await logger_1.Logger.child('AuthInfo');
             const aggregator = await configAggregator_1.ConfigAggregator.create();
@@ -729,8 +721,8 @@ class AuthInfo extends kit_1.AsyncOptionalCreatable {
         // Ideally, this would be removed at some point in the distant future when all auth files
         // now have the clientId stored in it.
         if (!options.clientId) {
-            options.clientId = exports.DEFAULT_CONNECTED_APP_INFO.legacyClientId;
-            options.clientSecret = exports.DEFAULT_CONNECTED_APP_INFO.legacyClientSecret;
+            options.clientId = exports.DEFAULT_CONNECTED_APP_INFO.clientId;
+            options.clientSecret = exports.DEFAULT_CONNECTED_APP_INFO.clientSecret;
         }
         if (!options.redirectUri) {
             options.redirectUri = this.getRedirectUri();
