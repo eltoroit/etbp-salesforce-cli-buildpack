@@ -28,19 +28,7 @@ const sfdcUrl_1 = require("../util/sfdcUrl");
 const connection_1 = require("./connection");
 const orgConfigProperties_1 = require("./orgConfigProperties");
 const org_1 = require("./org");
-messages_1.Messages.importMessagesDirectory(__dirname);
-const messages = messages_1.Messages.load('@salesforce/core', 'core', [
-    'authInfoCreationError',
-    'authInfoOverwriteError',
-    'namedOrgNotFound',
-    'orgDataNotAvailableError',
-    'orgDataNotAvailableError.actions',
-    'refreshTokenAuthError',
-    'jwtAuthErrors',
-    'authCodeUsernameRetrievalError',
-    'authCodeExchangeError',
-    'missingClientId',
-]);
+const messages = new messages_1.Messages('@salesforce/core', 'core', new Map([["authInfoCreationError", "Must pass a username and/or OAuth options when creating an AuthInfo instance."], ["authInfoOverwriteError", "Cannot create an AuthInfo instance that will overwrite existing auth data."], ["authInfoOverwriteError.actions", ["Create the AuthInfo instance using existing auth data by just passing the username. E.g., `AuthInfo.create({ username: 'my@user.org' });`."]], ["authCodeExchangeError", "Error authenticating with auth code due to: %s"], ["authCodeUsernameRetrievalError", "Could not retrieve the username after successful auth code exchange.\n\nDue to: %s"], ["jwtAuthError", "Error authenticating with JWT config due to: %s"], ["jwtAuthErrors", "Error authenticating with JWT.\nErrors encountered:\n%s"], ["refreshTokenAuthError", "Error authenticating with the refresh token due to: %s"], ["orgDataNotAvailableError", "An attempt to refresh the authentication token failed with a 'Data Not Found Error'. The org identified by username %s does not appear to exist. Likely cause is that the org was deleted by another user or has expired."], ["orgDataNotAvailableError.actions", ["Run `sfdx force:org:list --clean` to remove stale org authentications.", "Use `sfdx force:config:set` to update the defaultusername.", "Use `sfdx force:org:create` to create a new org.", "Use `sfdx auth` to authenticate an existing org."]], ["namedOrgNotFound", "No authorization information found for %s."], ["noAliasesFound", "Nothing to set."], ["invalidFormat", "Setting aliases must be in the format <key>=<value> but found: [%s]."], ["invalidJsonCasing", "All JSON input must have heads down camelcase keys. E.g., `{ sfdcLoginUrl: \"https://login.salesforce.com\" }`\nFound \"%s\" at %s"], ["missingClientId", "Client ID is required for JWT authentication."]]));
 // parses the id field returned from jsForce oauth2 methods to get
 // user ID and org ID.
 function parseIdUrl(idUrl) {
@@ -255,17 +243,20 @@ class AuthInfo extends kit_1.AsyncOptionalCreatable {
         // ask all those orgs if they know this orgId
         await Promise.all(hubAuthInfos.map(async (hubAuthInfo) => {
             try {
-                const data = await AuthInfo.queryScratchOrg(hubAuthInfo.username, fields.orgId);
-                if (data.totalSize > 0) {
-                    // if any return a result
-                    logger.debug(`found orgId ${fields.orgId} in devhub ${hubAuthInfo.username}`);
-                    try {
-                        await orgAuthInfo.save({ ...fields, devHubUsername: hubAuthInfo.username });
-                        logger.debug(`set ${hubAuthInfo.username} as devhub for scratch org ${orgAuthInfo.getUsername()}`);
-                    }
-                    catch (error) {
-                        logger.debug(`error updating auth file for ${orgAuthInfo.getUsername()}`, error);
-                    }
+                const soi = await AuthInfo.queryScratchOrg(hubAuthInfo.username, fields.orgId);
+                // if any return a result
+                logger.debug(`found orgId ${fields.orgId} in devhub ${hubAuthInfo.username}`);
+                try {
+                    await orgAuthInfo.save({
+                        ...fields,
+                        devHubUsername: hubAuthInfo.username,
+                        expirationDate: soi.ExpirationDate,
+                        isScratch: true,
+                    });
+                    logger.debug(`set ${hubAuthInfo.username} as devhub and expirationDate ${soi.ExpirationDate} for scratch org ${orgAuthInfo.getUsername()}`);
+                }
+                catch (error) {
+                    logger.debug(`error updating auth file for ${orgAuthInfo.getUsername()}`, error);
                 }
             }
             catch (error) {
@@ -282,7 +273,7 @@ class AuthInfo extends kit_1.AsyncOptionalCreatable {
     static async queryScratchOrg(devHubUsername, scratchOrgId) {
         const devHubOrg = await org_1.Org.create({ aliasOrUsername: devHubUsername });
         const conn = devHubOrg.getConnection();
-        const data = await conn.query(`select Id from ScratchOrgInfo where ScratchOrg = '${(0, sfdc_1.trimTo15)(scratchOrgId)}'`);
+        const data = await conn.singleRecordQuery(`select Id, ExpirationDate from ScratchOrgInfo where ScratchOrg = '${(0, sfdc_1.trimTo15)(scratchOrgId)}'`);
         return data;
     }
     /**
